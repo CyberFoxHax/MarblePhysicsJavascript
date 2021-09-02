@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/cannon": "^0.1.7",
     "@types/three": "^0.131.0",
     "typescript": "^4.3.5"
   }

@@ -3,6 +3,7 @@ var Time: _Time;
 var Input: _Input;
 
 var superCollider: THREE.Mesh;
+var textures: Record<string, HTMLImageElement> = {}; 
 
 document.addEventListener("DOMContentLoaded", function(){
     const three_scene = new THREE.Scene();
@@ -27,31 +28,6 @@ document.addEventListener("DOMContentLoaded", function(){
         if(scene[i].Object3D instanceof THREE.PerspectiveCamera)
             camera = <THREE.PerspectiveCamera>scene[i].Object3D;
     }
-
-    var geometries: THREE.BufferGeometry[] = [];
-    for (let i = 0; i < scene.length; i++) {
-        var mesh = <THREE.Mesh>scene[i].Object3D;
-        if(scene[i].Object3D == null
-        || (scene[i].Object3D instanceof THREE.Mesh) == false
-        || scene[i].Name == "Ball"
-        )
-            continue;
-        var cloned = mesh.geometry.clone();
-        //cloned.applyMatrix(mesh.matrixWorld);
-        /*for ( const key in cloned.attributes ) {
-            if ( key !== 'position' ) {
-                cloned.deleteAttribute( key );
-            }
-        }*/
-        geometries.push(cloned);
-    }
-    const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
-    mergedGeometry.boundsTree = new MeshBVHLib.MeshBVH( mergedGeometry );
-    var collider = new THREE.Mesh( mergedGeometry );
-    collider.material.wireframe = true;
-    collider.material.opacity = 0.5;
-    collider.material.transparent = true;
-    superCollider = collider;
 
     var components : MonoBehaviour[];
     function CreateComponentCache(){
@@ -79,6 +55,51 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     }
 
+    var wrapper = document.getElementById("textures");
+    var texes = wrapper.children;
+    for (let i = 0; i < texes.length; i++) {
+        var tex = <HTMLImageElement>texes[i];
+        var relativePath = tex.src.replace(location.href.replace("main.html",""), "");
+        textures[relativePath] = tex;
+        tex.parentElement.removeChild(tex);
+    }
+    wrapper.parentElement.removeChild(wrapper);
+
+    var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
+    tex2.needsUpdate = true;
+
+
+    const geometry = new THREE.SphereGeometry(0.2, 64, 64);
+    const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: tex2});
+    const sphere = new THREE.Mesh(geometry, material);
+    three_scene.add(sphere);
+
+    // Setup our world
+    var world = new CANNON.World();
+    world.gravity.set(0, -9.82, 0); // m/s²
+
+    // Create a sphere
+    var radius = 0.2; // m
+    var sphereBody = new CANNON.Body({
+        mass: 0.2, // kg
+        position: new CANNON.Vec3(0, 10, 0), // m
+        shape: new CANNON.Sphere(radius),
+        velocity: new CANNON.Vec3(0,0,0.5)
+    });    
+    world.addBody(sphereBody);
+
+    // Create a plane
+    var groundBody = new CANNON.Body({
+        mass: 0, // mass == 0 makes the body static
+        position: new CANNON.Vec3(0,-.5,0),
+        quaternion: new CANNON.Quaternion().setFromEuler(-Math.PI/2,0,0)
+    });
+    var groundShape = new CANNON.Plane();
+    groundBody.addShape(groundShape);
+    world.addBody(groundBody);
+
+
+
     function animate() {
         CreateComponentCache();
         components.forEach(p=>{
@@ -96,6 +117,15 @@ document.addEventListener("DOMContentLoaded", function(){
             if(p.LateUpdate != null)
                 p.LateUpdate();
         });
+
+        world.step(0.016, Time.deltaTime, 1);
+        sphere.position.x = sphereBody.position.x;
+        sphere.position.y = sphereBody.position.y;
+        sphere.position.z = sphereBody.position.z;
+        sphere.quaternion.x = sphereBody.quaternion.x;
+        sphere.quaternion.y = sphereBody.quaternion.y;
+        sphere.quaternion.z = sphereBody.quaternion.z;
+        sphere.quaternion.w = sphereBody.quaternion.w;
 
         requestAnimationFrame(animate);
         renderer.render(three_scene, camera);

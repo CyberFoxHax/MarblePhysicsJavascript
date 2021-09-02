@@ -18,6 +18,13 @@ class OrbitCamera extends MonoBehaviour {
 
 	// Use this for initialization
 	Start() {
+		var posStorage = <string>localStorage["camPos"];
+		if(posStorage != null){
+			var split = posStorage.split(",")
+			this.yaw = parseFloat(split[0]);
+			this.pitch = parseFloat(split[1]);
+		}
+
 		for (let i = 0; i < scene.length; i++) {
 			if(scene[i].Name == "Box"){
 				this.target = scene[i].Object3D;
@@ -59,5 +66,7 @@ class OrbitCamera extends MonoBehaviour {
 		this.transform.position.copy(position);
 
 		this.transform.lookAt(new THREE.Vector3(0,0,0));
+
+		localStorage["camPos"] = this.yaw +","+this.pitch;
 	}
 }

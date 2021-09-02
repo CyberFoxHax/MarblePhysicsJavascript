@@ -14,7 +14,7 @@ function CreateScene():GameObject[]{
             camera.position.z = 10;
             go.Object3D = camera;
         }),
-        NewGO(go=>{
+        /*NewGO(go=>{
             go.Name = "Ball";
             go.AddComponent(BallTest);
             const geometry = new THREE.SphereGeometry(0.5, 64, 64);
@@ -23,7 +23,7 @@ function CreateScene():GameObject[]{
             go.Object3D = sphere;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
-        }),
+        }),*/
         NewGO(go=>{
             go.Name = "Box";
             const geometry = new THREE.BoxGeometry(1,1,1);
