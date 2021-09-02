@@ -1,0 +1,3 @@
+source: https://github.com/mrdoob/three.js/
+rev: 73d423da7961c4988cd4ad82bd3a17e94ecea808
+version: 133dev

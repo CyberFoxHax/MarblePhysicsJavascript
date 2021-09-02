@@ -1,0 +1,3 @@
+source: https://github.com/gkjohnson/three-mesh-bvh
+rev: 02e5716d69688516f1ab5181ae73f0c4c86bef77
+version: 0.4.3

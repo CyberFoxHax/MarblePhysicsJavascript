@@ -1,0 +1,18 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "none",
+    "target": "es6",
+    "sourceMap": true,
+    "inlineSources": true,
+    "removeComments": true,
+    "outFile": "bundle.js"
+  },
+  "include": [
+    "Scripts"
+  ]
+  /*,
+  "exclude": [
+    "./Scripts/Behaviors/Movement.ts"
+  ]*/
+}
