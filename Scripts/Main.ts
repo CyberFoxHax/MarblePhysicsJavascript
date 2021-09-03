@@ -3,9 +3,14 @@ var Time: _Time;
 var Input: _Input;
 
 var superCollider: THREE.Mesh;
-var textures: Record<string, HTMLImageElement> = {}; 
+var textures: Record<string, HTMLImageElement> = {};
+var cannon_world: CANNON.World;
+
+var debugOut:HTMLElement;
 
 document.addEventListener("DOMContentLoaded", function(){
+    debugOut = document.getElementById("debug")
+
     const three_scene = new THREE.Scene();
     var camera: THREE.PerspectiveCamera = null;
 
@@ -15,11 +20,21 @@ document.addEventListener("DOMContentLoaded", function(){
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	renderer.outputEncoding = THREE.sRGBEncoding;
-    document.body.appendChild(renderer.domElement);
+    document.getElementById("renderer").appendChild(renderer.domElement);
 
     Input = new _Input();
     Input.Init(renderer.domElement);
     
+    var wrapper = document.getElementById("textures");
+    var texes = wrapper.children;
+    for (let i = 0; i < texes.length; i++) {
+        var tex = <HTMLImageElement>texes[i];
+        var relativePath = tex.src.replace(location.href.replace("main.html",""), "");
+        textures[relativePath] = tex;
+        tex.parentElement.removeChild(tex);
+    }
+    wrapper.parentElement.removeChild(wrapper);
+
     scene = CreateScene();
     for (let i = 0; i < scene.length; i++) {
         if(scene[i].Object3D == null)
@@ -42,41 +57,32 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     var time = new _Time();
-    time.Init();
     Time = time;
 
     var physicsObjects: MonoBehaviour[];
-    time.PhysicsStart = function(){
+    time.OnPhysicsStart = function(){
         physicsObjects = components.filter(p=>p.FixedUpdate != null);
     }
-    time.PhysicsStep = function(){
+    time.OnPhysicsStep = function(){
+        cannon_world.step(Time.fixedDeltaTime, Time.fixedDeltaTime, 0);
         for (let i = 0; i < physicsObjects.length; i++) {
             physicsObjects[i].FixedUpdate();
         }
     }
+    time.OnInit();
 
-    var wrapper = document.getElementById("textures");
-    var texes = wrapper.children;
-    for (let i = 0; i < texes.length; i++) {
-        var tex = <HTMLImageElement>texes[i];
-        var relativePath = tex.src.replace(location.href.replace("main.html",""), "");
-        textures[relativePath] = tex;
-        tex.parentElement.removeChild(tex);
-    }
-    wrapper.parentElement.removeChild(wrapper);
+    // Setup our world
+    cannon_world = new CANNON.World();
+    cannon_world.gravity.set(0, -9.82, 0); // m/s²
 
-    var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
+    /*var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
     tex2.needsUpdate = true;
-
 
     const geometry = new THREE.SphereGeometry(0.2, 64, 64);
     const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: tex2});
     const sphere = new THREE.Mesh(geometry, material);
     three_scene.add(sphere);
 
-    // Setup our world
-    var world = new CANNON.World();
-    world.gravity.set(0, -9.82, 0); // m/s²
 
     // Create a sphere
     var radius = 0.2; // m
@@ -96,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     var groundShape = new CANNON.Plane();
     groundBody.addShape(groundShape);
-    world.addBody(groundBody);
+    cannon_world.addBody(groundBody);*/
 
 
 
@@ -118,14 +124,14 @@ document.addEventListener("DOMContentLoaded", function(){
                 p.LateUpdate();
         });
 
-        world.step(0.016, Time.deltaTime, 1);
+        /*world.step(0.016, Time.deltaTime, 1);
         sphere.position.x = sphereBody.position.x;
         sphere.position.y = sphereBody.position.y;
         sphere.position.z = sphereBody.position.z;
         sphere.quaternion.x = sphereBody.quaternion.x;
         sphere.quaternion.y = sphereBody.quaternion.y;
         sphere.quaternion.z = sphereBody.quaternion.z;
-        sphere.quaternion.w = sphereBody.quaternion.w;
+        sphere.quaternion.w = sphereBody.quaternion.w;*/
 
         requestAnimationFrame(animate);
         renderer.render(three_scene, camera);

@@ -9,38 +9,49 @@ class _Time{
     private physicsInterval: number;
     private lastFrameTime: number;
 
-    public Init(){
-        this.lastFrameTime = performance.now();
-        this.startTime = performance.now();
+    private static GetNow(): number{
+        return performance.now() / 1000;
+    }
+
+    public OnInit(){
+        this.lastFrameTime = _Time.GetNow();
+        this.startTime = _Time.GetNow();
         this.physicsInterval = this.PhysicsTimeStep;
         if(this.physicsInterval < 1000/60){
             this.physicsInterval = 1000/60;
         }
         this.fixedTime = 0;
-        var _this = this;
-        setInterval(function(){
-            _this.OnPhysicsFrame();   
-        }, this.physicsInterval);
     }
 
     private OnPhysicsFrame(){
-        if(this.PhysicsStart != null)
-            this.PhysicsStart();
+        if(this.OnPhysicsStart != null)
+            this.OnPhysicsStart();
         this.fixedDeltaTime = this.PhysicsTimeStep;
         while(this.fixedTime < this.time){
             this.fixedTime += this.fixedDeltaTime;
-            if(this.PhysicsStep != null)
-                this.PhysicsStep();
+            if(this.OnPhysicsStep != null)
+                this.OnPhysicsStep();
         }
     }
     
     public OnFrame(){
-        var now = performance.now();
+        var now = _Time.GetNow();
         this.time = now - this.startTime;
         this.deltaTime = now - this.lastFrameTime;
         this.lastFrameTime = now;
+
+        if(this.fixedTime == 0){
+            this.fixedTime = this.time;
+            (function(_this:_Time){
+                function Physicstep(){
+                    _this.OnPhysicsFrame();
+                    setTimeout(Physicstep, _this.physicsInterval - _this.fixedDeltaTime*1000);
+                }
+                Physicstep();
+            })(this);
+        }
     }
 
-    public PhysicsStart: ()=>void;
-    public PhysicsStep: ()=>void;
+    public OnPhysicsStart: ()=>void;
+    public OnPhysicsStep: ()=>void;
 }

@@ -14,18 +14,26 @@ function CreateScene():GameObject[]{
             camera.position.z = 10;
             go.Object3D = camera;
         }),
-        /*NewGO(go=>{
+        NewGO(go=>{
             go.Name = "Ball";
+            var body = go.AddComponent(Rigidbody);
+            body.Collider = new CANNON.Sphere(0.2);
+            body.Mass = 0.2;
             go.AddComponent(BallTest);
-            const geometry = new THREE.SphereGeometry(0.5, 64, 64);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
+            tex2.needsUpdate = true;
+            const geometry = new THREE.SphereGeometry(0.2, 64, 64);
+            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: tex2});
             const sphere = new THREE.Mesh(geometry, material);
             go.Object3D = sphere;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
-        }),*/
+        }),
         NewGO(go=>{
             go.Name = "Box";
+            var body = go.AddComponent(Rigidbody);
+            body.Collider = new CANNON.Box(new CANNON.Vec3(1,1,1));
+            body.Mass = 0;
             const geometry = new THREE.BoxGeometry(1,1,1);
             const material = new THREE.MeshLambertMaterial({ color: 0x999999 });
             const cube = new THREE.Mesh(geometry, material);
@@ -36,12 +44,17 @@ function CreateScene():GameObject[]{
         }),
         NewGO(go=>{
             go.Name = "Plane";
-            const geometry = new THREE.PlaneGeometry(10,10,1);
+            var body = go.AddComponent(Rigidbody);
+            body.Collider = new CANNON.Box(new CANNON.Vec3(5,5,0.01));
+            body.Mass = 0;
+            const geometry = new THREE.PlaneGeometry(1,1,1);
             const material = new THREE.MeshLambertMaterial({ color: 0x999999 });
             const cube = new THREE.Mesh(geometry, material);
             go.Object3D = cube;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
+            go.Object3D.scale.x = 10;
+            go.Object3D.scale.y = 10;
             go.Object3D.position.y = -0.5;
             go.Object3D.rotation.x = -Math.PI/2;
         }),

@@ -4,8 +4,8 @@ class OrbitCamera extends MonoBehaviour {
     Update = null;
 
 	public distance : number = 2;
-	public yaw : number = 0;
-	public pitch : number = 0;
+	public yaw : number =  0;
+	public pitch : number = Math.PI/8;
 
 	public cameraSpeed : number = 0.01;
 	public invertX : boolean = false;
@@ -25,12 +25,8 @@ class OrbitCamera extends MonoBehaviour {
 			this.pitch = parseFloat(split[1]);
 		}
 
-		for (let i = 0; i < scene.length; i++) {
-			if(scene[i].Name == "Box"){
-				this.target = scene[i].Object3D;
-				break;
-			}
-		}
+		var ball = FindObjectsOfType(BallTest);
+		this.target = ball[0].transform;
 	}
 
 	// Update is called once per frame
@@ -48,25 +44,47 @@ class OrbitCamera extends MonoBehaviour {
 			this.pitch += this.cameraSpeed * Input.GetAxis("Mouse Y") * (this.invertY ? 1 : -1);
 		//}
 
-		var actualDistance = this.distance;// + (target.GetComponent<Marble>().radius * 2.0f);
+		var actualDistance = this.distance;
 
 		//Easy lock to the object
-		var position: THREE.Vector3 = this.target.position;
+		var position: THREE.Vector3 = this.target.position.clone();
 
 		//Rotate by pitch and yaw (and not roll, oh god my stomach)
+		//C#: Quaternion rotation = Quaternion.AngleAxis(yaw, Vector3.up);
 		var rotation: THREE.Quaternion = new THREE.Quaternion().setFromAxisAngle(_Vector3.up, this.yaw);
+		//C#: rotation *= Quaternion.AngleAxis(pitch, Vector3.right);
 		rotation.multiply(new THREE.Quaternion().setFromAxisAngle(_Vector3.right, this.pitch));
 
 		//Offset for orbiting
-		//position = rotation.multiplyVector3(new THREE.Vector3(0, 0, -actualDistance));
-		position = new THREE.Vector3(0, 0, -actualDistance).applyQuaternion(rotation);
+		//C#: position += rotation * new Vector3(0.0f, 0.0f, -actualDistance);
+		position.add(OrbitCamera.MultiplyRotation(rotation, new THREE.Vector3(0, 0, actualDistance)));
 
 		//Lame way of updating the transform
-		this.transform.setRotationFromQuaternion(rotation);
+		this.transform.quaternion.copy(rotation);
 		this.transform.position.copy(position);
 
-		this.transform.lookAt(new THREE.Vector3(0,0,0));
-
 		localStorage["camPos"] = this.yaw +","+this.pitch;
+	}
+
+	// https://github.com/Unity-Technologies/UnityCsReference/blob/61f92bd79ae862c4465d35270f9d1d57befd1761/Runtime/Export/Math/Quaternion.cs#L91
+	public static MultiplyRotation(rotation:THREE.Quaternion, point:THREE.Vector3): THREE.Vector3 {
+		var x = rotation.x * 2;
+		var y = rotation.y * 2;
+		var z = rotation.z * 2;
+		var xx = rotation.x * x;
+		var yy = rotation.y * y;
+		var zz = rotation.z * z;
+		var xy = rotation.x * y;
+		var xz = rotation.x * z;
+		var yz = rotation.y * z;
+		var wx = rotation.w * x;
+		var wy = rotation.w * y;
+		var wz = rotation.w * z;
+
+		var res = new THREE.Vector3();
+		res.x = (1 - (yy + zz)) * point.x + (xy - wz) * point.y + (xz + wy) * point.z;
+		res.y = (xy + wz) * point.x + (1 - (xx + zz)) * point.y + (yz - wx) * point.z;
+		res.z = (xz - wy) * point.x + (yz + wx) * point.y + (1 - (xx + yy)) * point.z;
+		return res;
 	}
 }
