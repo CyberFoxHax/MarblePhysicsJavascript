@@ -19,6 +19,7 @@ function CreateScene():GameObject[]{
             var body = go.AddComponent(Rigidbody);
             body.Collider = new CANNON.Sphere(0.2);
             body.Mass = 0.2;
+            //go.AddComponent(Movement);
             go.AddComponent(BallTest);
             var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
             tex2.needsUpdate = true;
