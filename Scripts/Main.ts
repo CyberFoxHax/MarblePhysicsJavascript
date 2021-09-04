@@ -3,12 +3,12 @@ var Time: _Time;
 var Input: _Input;
 
 var superCollider: THREE.Mesh;
-var textures: Record<string, HTMLImageElement> = {};
+var textures: Record<string, THREE.Texture> = {};
 var cannon_world: CANNON.World;
 
 var debugOut:HTMLElement;
 
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", async function(){
     debugOut = document.getElementById("debug")
 
     const three_scene = new THREE.Scene();
@@ -26,12 +26,20 @@ document.addEventListener("DOMContentLoaded", function(){
     Input.Init(renderer.domElement);
     
     var wrapper = document.getElementById("textures");
-    var texes = wrapper.children;
+    var texes = Array.from(wrapper.children);
     for (let i = 0; i < texes.length; i++) {
-        var tex = <HTMLImageElement>texes[i];
-        var relativePath = tex.src.replace(location.href.replace("main.html",""), "");
-        textures[relativePath] = tex;
-        tex.parentElement.removeChild(tex);
+        var img = <HTMLImageElement>texes[i];
+        img.parentElement.removeChild(img);
+        await new Promise(function(accept, reject){
+            img.onload = function(){
+                accept(null);
+            };
+        });
+        var rootAbsPath = location.href.replace("main.html","");
+        var relativePath = img.src.replace(rootAbsPath, "");
+        var texture = new THREE.Texture(img);
+        texture.needsUpdate = true;
+        textures[relativePath] = texture;
     }
     wrapper.parentElement.removeChild(wrapper);
 

@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Program",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/app.js",
+            "program": "${workspaceFolder}/express_framework_main.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

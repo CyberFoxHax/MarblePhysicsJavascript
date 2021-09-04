@@ -21,10 +21,9 @@ function CreateScene():GameObject[]{
             body.Mass = 0.2;
             //go.AddComponent(Movement);
             go.AddComponent(BallTest);
-            var tex2 = new THREE.Texture(textures["base.marble.jpg"]);
-            tex2.needsUpdate = true;
+            var texture = textures["base.marble.jpg"];
             const geometry = new THREE.SphereGeometry(0.2, 64, 64);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: tex2});
+            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: texture});
             const sphere = new THREE.Mesh(geometry, material);
             go.Object3D = sphere;
             go.Object3D.receiveShadow = true;
