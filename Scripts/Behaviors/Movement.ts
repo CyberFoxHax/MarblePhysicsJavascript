@@ -63,7 +63,7 @@ class Movement extends MonoBehaviour
 
 	//private _meshes: MeshData[];
 
-	private _rigidBody: CANNON.Body;
+	private _rigidBody: Rigidbody;
 	//private _collider: SphereCollider;
 	private _collisions: number;
 	private _lastJump: number;
@@ -71,7 +71,7 @@ class Movement extends MonoBehaviour
 
 	Start(): void {
 		this._camera = FindObjectsOfType(OrbitCamera)[0];
-		this._rigidBody = this.gameObject.GetComponent(Rigidbody).Body;
+		this._rigidBody = this.gameObject.GetComponent(Rigidbody);
 		//this._rigidBody.maxAngularVelocity = Infinity;
 		//this._collider = this.gameObject.GetComponent(SphereCollider);
         //this._meshes = [];
@@ -129,43 +129,12 @@ class Movement extends MonoBehaviour
 		var rot: Ref<THREE.Quaternion> = new Ref(this.transform.quaternion);
 		var velocity: Ref<THREE.Vector3> = new Ref(this.Velocity);
 		var omega: Ref<THREE.Vector3> = new Ref(this.AngularVelocity);
-
-		if(this.transform.position.y < 0.2){
-			var col = new CollisionInfo();
-			//col.Penetration = -contact.separation;
-			col.Penetration = 0;
-			col.Restitution = 1;
-			col.Friction = 1;
-			col.Normal = new THREE.Vector3(0,1,0);
-			col.Point = _Vector3.zero;
-			col.Velocity = _Vector3.zero;
-			contacts.push(col);
-		}
-
-		if(this.transform.position.x > 4.5){
-			var col = new CollisionInfo();
-			//col.Penetration = -contact.separation;
-			col.Penetration = 0;
-			col.Restitution = 1;
-			col.Friction = 1;
-			col.Normal = new THREE.Vector3(-1,0,0);
-			col.Point = _Vector3.zero;
-			col.Velocity = _Vector3.zero;
-			contacts.push(col);
-		}
 		
-		/*for (let i = 0; i < cannon_world.contacts.length; i++) {
-			const contact = cannon_world.contacts[i];
-			if(this.collisionBlacklist[contact.id] != null)
-				continue;
-			this.collisionBlacklist[contact.id] = contact;
-			
-			if(contact.bi != this._rigidBody){
-				continue;
-			}
-
+		for (let i = 0; i < this._rigidBody.collisions.length; i++) {
+			var contact = this._rigidBody.collisions[i];
 			var col = new CollisionInfo();
 			//col.Penetration = -contact.separation;
+			col.Penetration = 1;
 			col.Restitution = 1;
 			col.Friction = 1;
 			col.Normal = new THREE.Vector3(
@@ -181,7 +150,7 @@ class Movement extends MonoBehaviour
 			col.Velocity = _Vector3.zero;
 			contacts.push(col);
 			//Debug.DrawRay(contact.point, contact.normal, Color.blue, 5);
-		}*/
+		}
         
 
         this._updateMove(dt, velocity, omega, contacts);
@@ -190,7 +159,7 @@ class Movement extends MonoBehaviour
 		this._updateIntegration(dt.v, pos, rot, velocity, omega);
 
         //if (this.useUnityContacts == true) {
-            Rigidbody.Copy(this.transform, this._rigidBody);
+        	Rigidbody.Copy(this.transform, this._rigidBody.Body);
             //this._rigidBody.MoveRotation(rot);
         /*}
         else {
@@ -198,12 +167,12 @@ class Movement extends MonoBehaviour
 		    this.transform.quaternion.copy(rot.v);
         }*/
 		this.Velocity = velocity.v;
-		this._rigidBody.velocity.x = this.Velocity.x;
-		this._rigidBody.velocity.y = this.Velocity.y;
-		this._rigidBody.velocity.z = this.Velocity.z;
-		this._rigidBody.angularVelocity.x = omega.v.x;
-		this._rigidBody.angularVelocity.y = omega.v.y;
-		this._rigidBody.angularVelocity.z = omega.v.z;
+		this._rigidBody.Body.velocity.x = this.Velocity.x;
+		this._rigidBody.Body.velocity.y = this.Velocity.y;
+		this._rigidBody.Body.velocity.z = this.Velocity.z;
+		this._rigidBody.Body.angularVelocity.x = omega.v.x;
+		this._rigidBody.Body.angularVelocity.y = omega.v.y;
+		this._rigidBody.Body.angularVelocity.z = omega.v.z;
 		this.AngularVelocity = omega.v;
 	}
 

@@ -7,6 +7,7 @@ class Rigidbody extends MonoBehaviour {
     public Collider: CANNON.Shape;
     public Mass: number = 0;
     public IsKinematic: boolean = false;
+    public collisions: CANNON.ContactEquation[] = [];
     
     public static Copy(from: THREE.Object3D, to: CANNON.Body) : void
     public static Copy(from: CANNON.Body, to: THREE.Object3D) : void
@@ -32,50 +33,51 @@ class Rigidbody extends MonoBehaviour {
         cannon_world.addBody(this.Body);
         if(this.Body.mass == 0 && this.IsKinematic == false)
             this.Update = null;
-        /*this.Body.addEventListener("collide", function(e){
-            // figure out the contact information datastructure in e.contact
-            // looks similar to CANNON.Equation but with extra properties
-            var b = body;
-            debugger;
-            //https://schteppe.github.io/cannon.js/demos/events.html
-            
-        });
-        console.log(this.Body);*/
     }
 
     public Update(){
-        if(this.IsKinematic == true)
-            Rigidbody.Copy(this.transform, this.Body);
-        else
+        if(this.IsKinematic == false)
             Rigidbody.Copy(this.Body, this.transform);
     }
 
+    public CollisionEnter:(b:CANNON.ContactEquation)=>void;
+    public CollisionExit: (b:CANNON.ContactEquation)=>void;
+    public CollisionStay: (b:CANNON.ContactEquation)=>void;
 
-    /*private collisionBlacklist: Record<number, CANNON.ContactEquation> = {};
+    private OnCollisionEnter(c:CANNON.ContactEquation){
+        if(this.CollisionEnter != null)
+            this.CollisionEnter(c);
+    }
+    private OnCollisionExit(c:CANNON.ContactEquation){
+        if(this.CollisionEnter != null)
+            this.CollisionEnter(c);
+    }
+    private OnCollisionStay(c:CANNON.ContactEquation){
+        if(this.CollisionStay != null)
+            this.CollisionStay(c);
+    }
 
+    private lastCollisions: Record<number, CANNON.ContactEquation> = {};
     public FixedUpdate(){
-        var map = {};
+        var currentCollisions = {};
+        this.collisions.length = 0;
         for (let i = 0; i < cannon_world.contacts.length; i++) {
             const contact = cannon_world.contacts[i];
-            map[contact.id] = contact;
-        }
-
-        for (const key in this.collisionBlacklist){ 
-            if(map[key] == null){
-                delete this.collisionBlacklist[key];
+            if(contact.bi == this.Body){
+                currentCollisions[contact.id] = contact;
+                this.collisions.push(contact);
             }
         }
 
-
-        for (let i = 0; i < cannon_world.contacts.length; i++) {
-            const contact = cannon_world.contacts[i];
-            if(this.collisionBlacklist[contact.id] != null)
-                continue;
-            this.collisionBlacklist[contact.id] = contact;
-            
-            if(contact.bi != this.Body){
-                continue;
-            }
+        for (const key in currentCollisions){
+            if(this.lastCollisions[key] == null)
+                this.OnCollisionEnter(currentCollisions[key]);
+            this.OnCollisionStay(currentCollisions[key]);
         }
-    }*/
+        for (const key in this.lastCollisions){
+            if(currentCollisions[key] == null)
+                this.OnCollisionExit(this.lastCollisions[key]);
+        }
+        this.lastCollisions = currentCollisions;
+    }
 }

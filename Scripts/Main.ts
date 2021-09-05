@@ -40,6 +40,9 @@ window.onload = (async function(){
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	renderer.outputEncoding = THREE.sRGBEncoding;
     document.getElementById("renderer").appendChild(renderer.domElement);
+    renderer.domElement.onclick = function(){
+        renderer.domElement.requestPointerLock();
+    };
 
     Input = new _Input();
     Input.Init(renderer.domElement);

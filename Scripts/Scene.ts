@@ -4,7 +4,7 @@ function CreateScene():GameObject[]{
         f(go);
         return go;
     }
-    return [
+    var scene = [
         NewGO(go=>{
             go.AddComponent(ApiTest);
         }),
@@ -32,55 +32,23 @@ function CreateScene():GameObject[]{
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
         }),
-        /*NewGO(go=>{
+        NewGO(go=>{
             go.Name = "Box";
             var body = go.AddComponent(Rigidbody);
-            body.Collider = new CANNON.Box(new CANNON.Vec3(1,1,1));
+            var size = new THREE.Vector3(10,10,10);
+            body.Collider = new CANNON.Box(new CANNON.Vec3(size.x/2, size.y/2, size.z/2));
             body.Mass = 0;
-            const geometry = new THREE.BoxGeometry(1,1,1);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+            const material = new THREE.MeshPhysicalMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"], roughness: 0.8  });
             const cube = new THREE.Mesh(geometry, material);
             go.Object3D = cube;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
-            go.Object3D.position.set(4, 0, 0);
-        }),*/
-        NewGO(go=>{
-            go.Name = "Plane";
-            var body = go.AddComponent(Rigidbody);
-            body.Collider = new CANNON.Box(new CANNON.Vec3(5,5,0.01));
-            body.Mass = 0;
-            const geometry = new THREE.PlaneGeometry(1,1);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"] });
-            const cube = new THREE.Mesh(geometry, material);
-            go.Object3D = cube;
-            go.Object3D.receiveShadow = true;
-            go.Object3D.castShadow = true;
-            go.Object3D.scale.x = 10;
-            go.Object3D.scale.y = 10;
-            go.Object3D.position.y = 0;
-            go.Object3D.rotation.x = -Math.PI/2;
-        }),
-        NewGO(go=>{
-            go.Name = "Plane2";
-            var body = go.AddComponent(Rigidbody);
-            body.Collider = new CANNON.Box(new CANNON.Vec3(5,5,0.01));
-            body.Mass = 0;
-            const geometry = new THREE.PlaneGeometry(1,1);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"] });
-            const cube = new THREE.Mesh(geometry, material);
-            go.Object3D = cube;
-            go.Object3D.receiveShadow = true;
-            go.Object3D.castShadow = true;
-            go.Object3D.scale.x = 10;
-            go.Object3D.scale.y = 10;
-            go.Object3D.position.y = 5;
-            go.Object3D.position.x = 5;
-            go.Object3D.rotation.y = -Math.PI/2;
+            go.Object3D.position.set(0, -10, 0);
         }),
         NewGO(go=>{
             const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(0.2, 0.6, 0.9).normalize();
+            light.position.set(0.2, 0.6, 0.9).multiplyScalar(100);
             light.shadow.mapSize.setScalar( 256 );
             light.shadow.radius = 2;
             light.castShadow = true;
@@ -91,4 +59,27 @@ function CreateScene():GameObject[]{
             go.Object3D = light;
         })
     ];
+
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {    
+            if(x==5 && y == 5)
+                continue;
+            scene.push(NewGO(go=>{
+                go.Name = "Box";
+                var body = go.AddComponent(Rigidbody);
+                var size = new THREE.Vector3(10,Math.random()*10, 10);
+                body.Collider = new CANNON.Box(new CANNON.Vec3(size.x/2, size.y/2, size.z/2));
+                body.Mass = 0;
+                const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+                const material = new THREE.MeshPhysicalMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"], roughness: 0.8  });
+                const cube = new THREE.Mesh(geometry, material);
+                go.Object3D = cube;
+                go.Object3D.receiveShadow = true;
+                go.Object3D.castShadow = true;
+                go.Object3D.position.set((-10/2+x)*10, -5, (-10/2+y)*10);
+            }));
+        }   
+    }
+    
+    return scene;
 }

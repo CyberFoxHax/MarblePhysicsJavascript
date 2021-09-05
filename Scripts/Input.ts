@@ -46,7 +46,6 @@ class _Input{
     }
 
     public Init(renderer:HTMLElement){
-        var lastPos: THREE.Vector2;
         var _this = this;
         window.onkeydown = function(e: KeyboardEvent){
             switch (e.key) {
@@ -68,16 +67,12 @@ class _Input{
         };
 
         renderer.addEventListener("mousemove", function(e: MouseEvent){
-            var newPos = new THREE.Vector2(-e.clientX/33, e.clientY/33);
-            if(lastPos == null){
-                lastPos = newPos;
+            if(document.pointerLockElement != renderer)
                 return;
-            }
             _this._mouseDelta = new THREE.Vector2(
-                lastPos.x - newPos.x,
-                lastPos.y - newPos.y,
+                e.movementX/33,
+                e.movementY/33,
             );
-            lastPos = newPos;
         });
     }
 }
