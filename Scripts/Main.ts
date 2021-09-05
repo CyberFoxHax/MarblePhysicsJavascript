@@ -8,8 +8,27 @@ var cannon_world: CANNON.World;
 
 var debugOut:HTMLElement;
 
-document.addEventListener("DOMContentLoaded", async function(){
-    debugOut = document.getElementById("debug")
+window.onload = (async function(){
+    debugOut = document.getElementById("debug");
+
+    var wrapper = document.getElementById("textures");
+    var texes = Array.from(wrapper.children);
+    for (let i = 0; i < texes.length; i++) {
+        var img = <HTMLImageElement>texes[i];
+        img.parentElement.removeChild(img);
+        /*await new Promise(function(accept, reject){
+            img.onload = function(){
+                accept(null);
+            };
+        });*/
+        var rootAbsPath = location.href.replace("main.html","");
+        var relativePath = img.src.replace(rootAbsPath, "");
+        var texture = new THREE.Texture(img);
+        texture.needsUpdate = true;
+        textures[relativePath] = texture;
+    }
+    wrapper.parentElement.removeChild(wrapper);
+
 
     const three_scene = new THREE.Scene();
     var camera: THREE.PerspectiveCamera = null;
@@ -24,24 +43,6 @@ document.addEventListener("DOMContentLoaded", async function(){
 
     Input = new _Input();
     Input.Init(renderer.domElement);
-    
-    var wrapper = document.getElementById("textures");
-    var texes = Array.from(wrapper.children);
-    for (let i = 0; i < texes.length; i++) {
-        var img = <HTMLImageElement>texes[i];
-        img.parentElement.removeChild(img);
-        await new Promise(function(accept, reject){
-            img.onload = function(){
-                accept(null);
-            };
-        });
-        var rootAbsPath = location.href.replace("main.html","");
-        var relativePath = img.src.replace(rootAbsPath, "");
-        var texture = new THREE.Texture(img);
-        texture.needsUpdate = true;
-        textures[relativePath] = texture;
-    }
-    wrapper.parentElement.removeChild(wrapper);
 
     scene = CreateScene();
     for (let i = 0; i < scene.length; i++) {
@@ -77,7 +78,6 @@ document.addEventListener("DOMContentLoaded", async function(){
             physicsObjects[i].FixedUpdate();
         }
     }
-    time.OnInit();
 
     // Setup our world
     cannon_world = new CANNON.World();
@@ -112,8 +112,7 @@ document.addEventListener("DOMContentLoaded", async function(){
     groundBody.addShape(groundShape);
     cannon_world.addBody(groundBody);*/
 
-
-
+    time.Init();
     function animate() {
         CreateComponentCache();
         components.forEach(p=>{
@@ -127,10 +126,6 @@ document.addEventListener("DOMContentLoaded", async function(){
             if(p.Update != null)
                 p.Update();
         });
-        components.forEach(p=>{
-            if(p.LateUpdate != null)
-                p.LateUpdate();
-        });
 
         /*world.step(0.016, Time.deltaTime, 1);
         sphere.position.x = sphereBody.position.x;
@@ -143,7 +138,11 @@ document.addEventListener("DOMContentLoaded", async function(){
 
         requestAnimationFrame(animate);
         renderer.render(three_scene, camera);
+        components.forEach(p=>{
+            if(p.LateUpdate != null)
+                p.LateUpdate();
+        });
         Input.OnFrameEnd();
     };
-    animate();
+    requestAnimationFrame(animate);
 });

@@ -1,13 +1,10 @@
-const Rad2Deg = 360 / (Math.PI * 2);
-const Deg2Rad = (Math.PI * 2) / 360;
-
 function clamp(num: number, min: number, max: number) {
 	return num < min 
 	  ? min 
 	  : num > max 
 		? max 
 		: num
-  }
+}
 
 class Ref<T> {
 	constructor(value:T) {
@@ -40,9 +37,9 @@ class Movement extends MonoBehaviour
 	// TODO: Clean up / rename the following
 	private get CameraX():number { return this._camera.yaw; }
 	private get CameraY():number { return this._camera.pitch; }
-	private Velocity: THREE.Vector3;
-	private AngularVelocity: THREE.Vector3;
-	private get Radius() { return this._collider.radius * this.transform.scale.x; }
+	private Velocity: THREE.Vector3 = _Vector3.zero;
+	private AngularVelocity: THREE.Vector3 = _Vector3.zero;
+	private get Radius() { return 0.2; }
 
 	private get InputMovement():THREE.Vector2 {
         return new THREE.Vector2(-Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).add(this._fakeInput);
@@ -51,7 +48,7 @@ class Movement extends MonoBehaviour
 
 	private get Jump() { return Input.GetButton("Jump"); }
 
-	private GravityDir: THREE.Vector3 = new THREE.Vector3(0,-9.8,0);
+	private GravityDir: THREE.Vector3 = new THREE.Vector3(0,-1,0);
 	private _forwards = _Vector3.forward;
 
 	private _bounceYet: boolean;
@@ -62,25 +59,25 @@ class Movement extends MonoBehaviour
 	private _contactTime: number;
 	private _rollVolume: number;
 
-	private _colTests: MeshCollider[];
+	//private _colTests: MeshCollider[];
 
-	private _meshes: MeshData[];
+	//private _meshes: MeshData[];
 
-	private _rigidBody: Rigidbody;
-	private _collider: SphereCollider;
+	private _rigidBody: CANNON.Body;
+	//private _collider: SphereCollider;
 	private _collisions: number;
 	private _lastJump: number;
 	private _lastNormal: THREE.Vector3;
 
 	Start(): void {
 		this._camera = FindObjectsOfType(OrbitCamera)[0];
-		this._rigidBody = this.gameObject.GetComponent(Rigidbody);
-		this._rigidBody.maxAngularVelocity = Infinity;
-		this._collider = this.gameObject.GetComponent(SphereCollider);
-        this._meshes = [];
-		this._colTests = [];
+		this._rigidBody = this.gameObject.GetComponent(Rigidbody).Body;
+		//this._rigidBody.maxAngularVelocity = Infinity;
+		//this._collider = this.gameObject.GetComponent(SphereCollider);
+        //this._meshes = [];
+		//this._colTests = [];
 
-        var meshColliders: MeshCollider[] = FindObjectsOfType(MeshCollider);
+        /*var meshColliders: MeshCollider[] = FindObjectsOfType(MeshCollider);
         for (let i = 0; i < meshColliders.length; i++) {
             const item = meshColliders[i];
             this._colTests.push(item);
@@ -88,25 +85,29 @@ class Movement extends MonoBehaviour
 
         for (let i = 0; i < this._colTests.length; i++) {
             this.GenerateMeshInfo(array[i]);
-        }
+        }*/
 	}
 
-	private GenerateMeshInfo(meshCollider: MeshCollider): void
+	/*private GenerateMeshInfo(meshCollider: CANNON.Body): void
 	{
 		var sharedMesh = meshCollider.sharedMesh;
 		var triangles = sharedMesh.triangles;
-        var vertices = sharedMesh.vertices;
+       	var vertices = sharedMesh.vertices;
         
         var md = new MeshData();
         md.Triangles = triangles;
         md.Vertices = vertices;
 		this._meshes.push(md);
-	}
+	}*/
 	
-	public AddMesh(meshCollider: MeshCollider): void
+	/*public AddMesh(meshCollider: MeshCollider): void
 	{
 		this._colTests.push(meshCollider);
 		this.GenerateMeshInfo(meshCollider);
+	}*/
+
+	Update(){
+		
 	}
 	
 	// Per-tick updates
@@ -122,16 +123,6 @@ class Movement extends MonoBehaviour
 		}
 	}
 
-    public useUnityContacts: boolean = true;
-    private _unityCollisions: HashSet<UnityEngine.Collision> = new HashSet<UnityEngine.Collision>();
-
-    private OnCollisionStay(collision: UnityEngine.Collision): void {
-        this._unityCollisions.Add(collision);
-    }
-    private OnCollisionExit(collision: UnityEngine.Collision): void {
-        this._unityCollisions.Remove(collision);
-    }
-
     _advancePhysics(dt: Ref<number>): void {
 		var contacts: CollisionInfo[] = [];
 		var pos: Ref<THREE.Vector3> = new Ref(this.transform.position);
@@ -139,98 +130,93 @@ class Movement extends MonoBehaviour
 		var velocity: Ref<THREE.Vector3> = new Ref(this.Velocity);
 		var omega: Ref<THREE.Vector3> = new Ref(this.AngularVelocity);
 
-        if (this.useUnityContacts == true) {
-            for (let i = 0; i < this._unityCollisions.length; i++) {
-                const collision = this._unityCollisions[i];
-                for (let ii = 0; ii < collision.contacts.length; ii++) {
-                    const contact = collision.contacts[ii];
+		if(this.transform.position.y < 0.2){
+			var col = new CollisionInfo();
+			//col.Penetration = -contact.separation;
+			col.Penetration = 0;
+			col.Restitution = 1;
+			col.Friction = 1;
+			col.Normal = new THREE.Vector3(0,1,0);
+			col.Point = _Vector3.zero;
+			col.Velocity = _Vector3.zero;
+			contacts.push(col);
+		}
 
-                    var penetration = -contact.separation;
-                    var col = new CollisionInfo();
-                    col.Penetration = penetration;
-                    col.Restitution = 1;
-                    col.Friction = 1;
-                    col.Normal = contact.normal;
-                    col.Point = contact.point;
+		if(this.transform.position.x > 4.5){
+			var col = new CollisionInfo();
+			//col.Penetration = -contact.separation;
+			col.Penetration = 0;
+			col.Restitution = 1;
+			col.Friction = 1;
+			col.Normal = new THREE.Vector3(-1,0,0);
+			col.Point = _Vector3.zero;
+			col.Velocity = _Vector3.zero;
+			contacts.push(col);
+		}
+		
+		/*for (let i = 0; i < cannon_world.contacts.length; i++) {
+			const contact = cannon_world.contacts[i];
+			if(this.collisionBlacklist[contact.id] != null)
+				continue;
+			this.collisionBlacklist[contact.id] = contact;
+			
+			if(contact.bi != this._rigidBody){
+				continue;
+			}
 
-                    if (contact.otherCollider.attachedRigidbody != null) {
-                        col.Collider = contact.otherCollider;
-                        col.Velocity = contact.otherCollider.attachedRigidbody.GetPointVelocity(contact.point);
-                    }
-                    contacts.push(col);
-                    //Debug.DrawRay(contact.point, contact.normal, Color.blue, 5);
-                }
-            }
-        }
-        /*else {
-            var radius = this.Radius + 0.0001;
-            for (var index = 0; index < this._colTests.Count; index++) {
-                var meshCollider = this._colTests[index];
-                var localPos: THREE.Vector3 = meshCollider.transform.InverseTransformPoint(pos);
-                var length: number = this._meshes[index].Triangles.Length;
-                for (var i = 0; i < length; i += 3) {
-                    var triangle0 = this._meshes[index].Triangles[i];
-                    var triangle1 = this._meshes[index].Triangles[i + 1];
-                    var triangle2 = this._meshes[index].Triangles[i + 2];
-                    var p0 = this._meshes[index].Vertices[triangle0];
-                    var p1 = this._meshes[index].Vertices[triangle1];
-                    var p2 = this._meshes[index].Vertices[triangle2];
-                    var normal = THREE.Vector3.Cross(p2 - p0, p2 - p1).normalized;
-
-                    if (CollisionHelpers.ClosestPtPointTriangle(localPos, radius, p0, p1, p2, normal, out var closest) == false)
-                        continue;
-
-                    THREE.Vector3 vector32 = localPos - closest;
-                    if (vector32.sqrMagnitude > radius * radius)
-                        continue;
-
-                    THREE.Vector3 vector33 = localPos - closest;
-                    if (THREE.Vector3.Dot(localPos - closest, normal) < 0.0)
-                        continue;
-
-                    vector33.Normalize();
-                    CollisionInfo collisionInfo = new CollisionInfo() {
-                        Normal = meshCollider.transform.TransformDirection(vector33),
-                        Point = meshCollider.transform.TransformPoint(closest)
-                    };
-                    Debug.DrawRay(collisionInfo.Point, collisionInfo.Normal, Color.red);
-                    collisionInfo.Penetration = radius - THREE.Vector3.Dot(localPos - closest, collisionInfo.Normal);
-                    collisionInfo.Restitution = 1f;
-                    collisionInfo.Friction = 1f;
-                    if (_colTests[index].attachedRigidbody != null)
-                        collisionInfo.Velocity = _colTests[index].attachedRigidbody.GetPointVelocity(collisionInfo.Point);
-                    contacts.Add(collisionInfo);
-                }
-            }
-        }*/
+			var col = new CollisionInfo();
+			//col.Penetration = -contact.separation;
+			col.Restitution = 1;
+			col.Friction = 1;
+			col.Normal = new THREE.Vector3(
+				-contact.ni.x,
+				-contact.ni.y,
+				-contact.ni.z
+			);
+			col.Point = new THREE.Vector3(
+				contact.bi.position.x,
+				contact.bi.position.y-this.Radius,
+				contact.bi.position.z
+			);
+			col.Velocity = _Vector3.zero;
+			contacts.push(col);
+			//Debug.DrawRay(contact.point, contact.normal, Color.blue, 5);
+		}*/
+        
 
         this._updateMove(dt, velocity, omega, contacts);
 		// velocity += _gravityDir * _gravity * dt;
 
 		this._updateIntegration(dt.v, pos, rot, velocity, omega);
 
-        if (this.useUnityContacts == true) {
-            this._rigidBody.MovePosition(pos);
-            this._rigidBody.MoveRotation(rot);
-        }
+        //if (this.useUnityContacts == true) {
+            Rigidbody.Copy(this.transform, this._rigidBody);
+            //this._rigidBody.MoveRotation(rot);
+        /*}
         else {
 		    this.transform.position.copy(pos.v);
 		    this.transform.quaternion.copy(rot.v);
-        }
+        }*/
 		this.Velocity = velocity.v;
+		this._rigidBody.velocity.x = this.Velocity.x;
+		this._rigidBody.velocity.y = this.Velocity.y;
+		this._rigidBody.velocity.z = this.Velocity.z;
+		this._rigidBody.angularVelocity.x = omega.v.x;
+		this._rigidBody.angularVelocity.y = omega.v.y;
+		this._rigidBody.angularVelocity.z = omega.v.z;
 		this.AngularVelocity = omega.v;
 	}
 
 	private _updateIntegration(dt: number, pos: Ref<THREE.Vector3>, rot: Ref<THREE.Quaternion>, vel: Ref<THREE.Vector3>, avel: Ref<THREE.Vector3>): void
 	{
-		pos.v.add(vel.v.multiplyScalar(dt));
+		pos.v.add(vel.v.clone().multiplyScalar(dt));
 		var vector3:THREE.Vector3 = avel.v;
 		var num1:number = vector3.length();
 		if (num1 <= 0.0000001)
 			return;
-		var quaternion: THREE.Quaternion = new THREE.Quaternion().setFromAxisAngle(vector3.clone().multiplyScalar(1 / num1), dt * num1 * Rad2Deg);
+		var quaternion: THREE.Quaternion = new THREE.Quaternion().setFromAxisAngle(vector3.clone().multiplyScalar(1 / num1), dt * num1);
 		quaternion.normalize();
-		rot.v.copy(quaternion.multiplyVector3(rot));
+		rot.v.copy(quaternion.clone().multiply(rot.v));
 		rot.v.normalize();
 	}
 
@@ -240,22 +226,22 @@ class Movement extends MonoBehaviour
 		angVelocity: Ref<THREE.Vector3>,
 		contacts: CollisionInfo[]): void
 	{
-		var torque: Ref<THREE.Vector3>;
-		var targetAngVel: Ref<THREE.Vector3>;
+		var torque: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
+		var targetAngVel: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
 		var isMoving = this._computeMoveForces(angVelocity.v, torque, targetAngVel);
 		this._velocityCancel(contacts, velocity, angVelocity, !isMoving, false);
         var externalForces: Ref<THREE.Vector3> = new Ref(this._getExternalForces(dt.v, contacts));
         var angAccel: Ref<THREE.Vector3> = new Ref<THREE.Vector3>(null);
 		this._applyContactForces(dt.v, contacts, !isMoving, torque.v, targetAngVel.v, velocity, angVelocity, externalForces, angAccel);
-		velocity.v.add(externalForces.v.multiplyScalar(dt.v));
-		angVelocity.v.add(angAccel.v.multiplyScalar(dt.v));
+		velocity.v.add(externalForces.v.clone().multiplyScalar(dt.v));
+		angVelocity.v.add(angAccel.v.clone().multiplyScalar(dt.v));
 		this._velocityCancel(contacts, velocity, angVelocity, !isMoving, true);
 		var contactTime: number = dt.v;
 		// testMove(ref contactTime, ...)
 		if (dt.v * 0.99 > contactTime)
 		{
-			velocity.v.sub(externalForces.v.multiplyScalar(dt.v - contactTime));
-			angVelocity.v.sub(angAccel.v.multiplyScalar(dt.v - contactTime));
+			velocity.v.sub(externalForces.v.clone().multiplyScalar(dt.v - contactTime));
+			angVelocity.v.sub(angAccel.v.clone().multiplyScalar(dt.v - contactTime));
 			dt.v = contactTime;
 		}
 		
@@ -269,15 +255,15 @@ class Movement extends MonoBehaviour
 		targetAngVel.v = _Vector3.zero;
 		var relGravity: THREE.Vector3 = this.GravityDir.clone().negate().multiplyScalar(this.Radius);
         var topVelocity: THREE.Vector3 = angVelocity.clone().cross(relGravity);
-        var sideDir: Ref<THREE.Vector3>;
-        var motionDir: Ref<THREE.Vector3>;
-        var _: Ref<THREE.Vector3>;
+        var sideDir: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
+        var motionDir: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
+        var _: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
 		this._getMarbleAxis(sideDir, motionDir, _);
 		var topY: number = topVelocity.clone().dot(motionDir.v);
 		var topX: number = topVelocity.clone().dot(sideDir.v);
 		var move: THREE.Vector2 = this.InputMovement;
 		// move.Normalize();
-		var moveY: number = this.MaxRollVelocity * move.y;
+		var moveY: number = this.MaxRollVelocity * -move.y;
 		var moveX: number = this.MaxRollVelocity * move.x;
 		if (Math.abs(moveY) < 0.001 && Math.abs(moveX) < 0.001)
 			return false;
@@ -295,7 +281,7 @@ class Movement extends MonoBehaviour
 			.multiplyScalar(moveY)
 			.add(sideDir.v.multiplyScalar(moveX));
 		targetAngVel.v = relGravity.clone().cross(ddd).divideScalar(relGravity.lengthSq());
-		torque.v = targetAngVel.v.sub(angVelocity);
+		torque.v = targetAngVel.v.clone().sub(angVelocity);
 		var targetAngAccel: number = torque.v.length();
 		if (targetAngAccel > this.AngularAcceleration)
 		{
@@ -310,7 +296,7 @@ class Movement extends MonoBehaviour
 		var m = new THREE.Quaternion().setFromEuler(new THREE.Euler(this.CameraY, 0, 0))
 			.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, this.CameraX, 0)));
 		upDir.v = this.GravityDir.clone().negate();
-		motionDir.v = m.clone().multiplyVector3(this._forwards);
+		motionDir.v = MultiplyRotation(m, this._forwards);
 		sideDir.v = motionDir.v.clone().cross(upDir.v);
 		sideDir.v.normalize();
 		motionDir.v = upDir.v.clone().cross(sideDir.v);
@@ -321,9 +307,9 @@ class Movement extends MonoBehaviour
 		var force: THREE.Vector3 = this.GravityDir.clone().multiplyScalar(this.Gravity);
 		if (contacts.length == 0)
 		{
-            var sideDir: Ref<THREE.Vector3>;
-            var motionDir: Ref<THREE.Vector3>;
-            var _: Ref<THREE.Vector3>;
+            var sideDir: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
+            var motionDir: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
+            var _: Ref<THREE.Vector3> = new Ref(new THREE.Vector3());
 			this._getMarbleAxis(sideDir, motionDir, _);
 			force.add(
 				sideDir.v.clone().multiplyScalar(this.InputMovement.x)
@@ -349,7 +335,7 @@ class Movement extends MonoBehaviour
 				var bounceSpeed: number = coll.Normal.clone().dot(relativeVelocity);
 				if (!flag1 && bounceSpeed < 0.0 || bounceSpeed < -0.001)
 				{
-					var invBounce: THREE.Vector3 = coll.Normal.multiplyScalar(bounceSpeed);
+					var invBounce: THREE.Vector3 = coll.Normal.clone().multiplyScalar(bounceSpeed);
 					// _reportBounce(contacts[index].point, contacts[index].normal, -num3);
 					if (noBounce)
 					{
@@ -424,8 +410,8 @@ class Movement extends MonoBehaviour
 						{
 							var velocityAdd: THREE.Vector3 = invBounce.multiplyScalar(-(1.0 + this.BounceRestitution * coll.Restitution));
 							var velocityAtContact: THREE.Vector3 = relativeVelocity.clone().add(omega.v.clone().cross(coll.Normal.clone().negate()).multiplyScalar(this.Radius));
-							var num5: number = -coll.Normal.dot(relativeVelocity);
-							var vector36: THREE.Vector3 = velocityAtContact.sub(coll.Normal.multiplyScalar(coll.Normal.dot(relativeVelocity)));
+							var num5: number = -coll.Normal.clone().dot(relativeVelocity);
+							var vector36: THREE.Vector3 = velocityAtContact.sub(coll.Normal.clone().multiplyScalar(coll.Normal.clone().dot(relativeVelocity)));
 							//var vector36: THREE.Vector3 = velocityAtContact - coll.Normal * THREE.Vector3.Dot(coll.Normal, relativeVelocity);
 							var num6: number = vector36.length();
 							if (Math.abs(num6) > 0.001)
@@ -483,7 +469,7 @@ class Movement extends MonoBehaviour
 			{
 				var num3: number = 0.1;
 				var penetration: number = contacts[index].Penetration;
-				var num4: number = velocity.v.add(vector39.multiplyScalar(num8)).dot(contacts[index].Normal);
+				var num4: number = velocity.v.add(vector39.clone().multiplyScalar(num8)).dot(contacts[index].Normal);
 				if (num3 * num4 < penetration)
 					num8 += (penetration - num4 * num3) / num3 / contacts[index].Normal.dot(vector39);
 			}
@@ -514,7 +500,7 @@ class Movement extends MonoBehaviour
 		{
 			// if (contacts[index2].collider == null)
 			// {
-			var num2: number = -contacts[index2].Normal.clone().negate().dot(linAccel.v);
+			var num2: number = -contacts[index2].Normal.clone().dot(linAccel.v);
 			if (num2 > num1)
 			{
 				num1 = num2;
@@ -527,13 +513,13 @@ class Movement extends MonoBehaviour
 		var collisionInfo: CollisionInfo = index1 != -1 ? contacts[index1] : new CollisionInfo();
 		if (index1 != -1 && this.Jump)
 		{
-			var vector32: THREE.Vector3 = velocity.v.sub(collisionInfo.Velocity);
+			var vector32: THREE.Vector3 = velocity.v.clone().sub(collisionInfo.Velocity);
 			var num2: number = collisionInfo.Normal.dot(vector32);
 			if (num2 < 0.0)
 				num2 = 0.0;
 			if (num2 < this.JumpImpulse)
 			{
-				velocity.v.add(collisionInfo.Normal.multiplyScalar(this.JumpImpulse - num2));
+				velocity.v.add(collisionInfo.Normal.clone().multiplyScalar(this.JumpImpulse - num2));
 				// MarbleControlComponent._soundBank.PlayCue(MarbleControlComponent._sounds[12]);
 			}
 		}
@@ -541,9 +527,9 @@ class Movement extends MonoBehaviour
 		for (var index2 = 0; index2 < contacts.length; ++index2)
 		{
 			var num2: number = -contacts[index2].Normal.clone().negate().dot(linAccel.v);
-			if (num2 > 0.0 && contacts[index2].Normal.dot(velocity.v.sub(contacts[index2].Velocity)) <= 0.00001){
+			if (num2 > 0.0 && contacts[index2].Normal.dot(velocity.v.clone().sub(contacts[index2].Velocity)) <= 0.00001){
 			//if (num2 > 0.0 && THREE.Vector3.Dot(contacts[index2].Normal, velocity - contacts[index2].Velocity) <= 0.00001){
-				linAccel.v.add(contacts[index2].Normal.multiplyScalar(num2));
+				linAccel.v.add(contacts[index2].Normal.clone().multiplyScalar(num2));
 			}
 		}
 
@@ -571,9 +557,9 @@ class Movement extends MonoBehaviour
 					flag = false;
 				}
 
-				var vector35: THREE.Vector3 = vector32.divideScalar(num2);
+				var vector35: THREE.Vector3 = vector32.clone().divideScalar(num2);
 				vector33 = collisionInfo.Normal.clone().negate().cross(vector35.clone().negate()).multiplyScalar(num4);
-				vector34 = vector35.multiplyScalar(-num5);
+				vector34 = vector35.clone().multiplyScalar(-num5);
 				this._slipAmount = num2 - num6;
 			}
 
@@ -584,10 +570,10 @@ class Movement extends MonoBehaviour
 				if (isCentered)
 				{
 					var vector37: THREE.Vector3 = omega.v.clone().add(angAccel.v).multiplyScalar(dt);
-					aControl = desiredOmega.sub(vector37);
+					aControl = desiredOmega.clone().sub(vector37);
 					var num3 = aControl.length();
 					if (num3 > this.BrakingAcceleration)
-						aControl = aControl.multiplyScalar(this.BrakingAcceleration / num3);
+						aControl = aControl.clone().multiplyScalar(this.BrakingAcceleration / num3);
 				}
 
 				var ddd = collisionInfo.Normal.clone().negate().multiplyScalar(this.Radius)
@@ -628,7 +614,7 @@ namespace CollisionHelpers {
         var num2: number = p0.dot(normal);
         if (Math.abs(num1 - num2) > radius * 1.1)
             return false;
-        closest.v = pt.add(normal.multiplyScalar(num2 - num1));
+        closest.v = pt.clone().add(normal.clone().multiplyScalar(num2 - num1));
         if (PointInTriangle(closest.v, p0, p1, p2))
             return true;
 		var num3: number = 10;
@@ -757,13 +743,13 @@ class CollisionInfo
     public Point: THREE.Vector3;
     public Normal: THREE.Vector3;
     public Velocity: THREE.Vector3;
-    public Collider: Collider;
+    public Collider: CANNON.Body;
     public Friction: number;
     public Restitution: number;
     public Penetration: number;
 }
 
-class MeshData {
+/*class MeshData {
     public Triangles: number[];
     public Vertices: THREE.Vector3[];
-}
+}*/

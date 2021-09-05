@@ -13,7 +13,7 @@ class _Time{
         return performance.now() / 1000;
     }
 
-    public OnInit(){
+    public Init(){
         this.lastFrameTime = _Time.GetNow();
         this.startTime = _Time.GetNow();
         this.physicsInterval = this.PhysicsTimeStep;
@@ -21,6 +21,19 @@ class _Time{
             this.physicsInterval = 1000/60;
         }
         this.fixedTime = 0;
+    }
+
+    public InitPhysics(){
+        if(this.fixedTime == 0){
+            this.fixedTime = this.time;
+            (function(_this:_Time){
+                function Physicstep(){
+                    _this.OnPhysicsFrame();
+                    setTimeout(Physicstep, _this.physicsInterval - _this.fixedDeltaTime*1000);
+                }
+                Physicstep();
+            })(this);
+        }
     }
 
     private OnPhysicsFrame(){
@@ -39,17 +52,7 @@ class _Time{
         this.time = now - this.startTime;
         this.deltaTime = now - this.lastFrameTime;
         this.lastFrameTime = now;
-
-        if(this.fixedTime == 0){
-            this.fixedTime = this.time;
-            (function(_this:_Time){
-                function Physicstep(){
-                    _this.OnPhysicsFrame();
-                    setTimeout(Physicstep, _this.physicsInterval - _this.fixedDeltaTime*1000);
-                }
-                Physicstep();
-            })(this);
-        }
+        this.InitPhysics();
     }
 
     public OnPhysicsStart: ()=>void;

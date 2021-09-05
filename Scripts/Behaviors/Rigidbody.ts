@@ -8,9 +8,9 @@ class Rigidbody extends MonoBehaviour {
     public Mass: number = 0;
     public IsKinematic: boolean = false;
     
-    private static Copy(from: THREE.Object3D, to: CANNON.Body) : void
-    private static Copy(from: CANNON.Body, to: THREE.Object3D) : void
-    private static Copy(from: Transform, to: Transform) : void{
+    public static Copy(from: THREE.Object3D, to: CANNON.Body) : void
+    public static Copy(from: CANNON.Body, to: THREE.Object3D) : void
+    public static Copy(from: Transform, to: Transform) : void{
         to.position.x = from.position.x;
         to.position.y = from.position.y;
         to.position.z = from.position.z;
@@ -19,6 +19,8 @@ class Rigidbody extends MonoBehaviour {
         to.quaternion.z = from.quaternion.z;
         to.quaternion.w = from.quaternion.w;
     }
+
+    public contacts:CANNON.ContactEquation[] = [];
 
     public Start(){
         var body = new CANNON.Body({
@@ -30,14 +32,15 @@ class Rigidbody extends MonoBehaviour {
         cannon_world.addBody(this.Body);
         if(this.Body.mass == 0 && this.IsKinematic == false)
             this.Update = null;
-        this.Body.addEventListener("collide", function(e){
+        /*this.Body.addEventListener("collide", function(e){
             // figure out the contact information datastructure in e.contact
             // looks similar to CANNON.Equation but with extra properties
-            window.contact = e.contact;
-            console.log(e.contact);
+            var b = body;
+            debugger;
             //https://schteppe.github.io/cannon.js/demos/events.html
             
         });
+        console.log(this.Body);*/
     }
 
     public Update(){
@@ -46,4 +49,33 @@ class Rigidbody extends MonoBehaviour {
         else
             Rigidbody.Copy(this.Body, this.transform);
     }
+
+
+    /*private collisionBlacklist: Record<number, CANNON.ContactEquation> = {};
+
+    public FixedUpdate(){
+        var map = {};
+        for (let i = 0; i < cannon_world.contacts.length; i++) {
+            const contact = cannon_world.contacts[i];
+            map[contact.id] = contact;
+        }
+
+        for (const key in this.collisionBlacklist){ 
+            if(map[key] == null){
+                delete this.collisionBlacklist[key];
+            }
+        }
+
+
+        for (let i = 0; i < cannon_world.contacts.length; i++) {
+            const contact = cannon_world.contacts[i];
+            if(this.collisionBlacklist[contact.id] != null)
+                continue;
+            this.collisionBlacklist[contact.id] = contact;
+            
+            if(contact.bi != this.Body){
+                continue;
+            }
+        }
+    }*/
 }

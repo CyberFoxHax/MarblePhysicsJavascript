@@ -1,15 +1,26 @@
 
 class _Input{
     GetButton(name:string):boolean{
-        
+        switch (name) {
+            case "Jump":
+                return  this._jump;
+        }
     }
 
     GetKeyDown():boolean{
-
+        return false;
     }
 
+    private _jump: boolean = false;
+    private _axisRaw:THREE.Vector2 = new THREE.Vector2();
     GetAxisRaw(name:string):number{
-
+        switch (name) {
+            case "Horizontal":
+                return this._axisRaw.x;
+            case "Vertical":
+                return this._axisRaw.y;
+        }
+        return 0;
     }
 
     GetMouseButtonDown(button:number): boolean{
@@ -37,8 +48,27 @@ class _Input{
     public Init(renderer:HTMLElement){
         var lastPos: THREE.Vector2;
         var _this = this;
+        window.onkeydown = function(e: KeyboardEvent){
+            switch (e.key) {
+                case "w": _this._axisRaw.y = 1; break;
+                case "a": _this._axisRaw.x = -1; break;
+                case "s": _this._axisRaw.y = -1; break;
+                case "d": _this._axisRaw.x = 1; break;
+                case " ": _this._jump = true; break;
+            }
+        };
+        window.onkeyup = function(e: KeyboardEvent){
+            switch (e.key) {
+                case "w": _this._axisRaw.y = 0; break;
+                case "a": _this._axisRaw.x = 0; break;
+                case "s": _this._axisRaw.y = 0; break;
+                case "d": _this._axisRaw.x = 0; break;
+                case " ": _this._jump = false; break;
+            }
+        };
+
         renderer.addEventListener("mousemove", function(e: MouseEvent){
-            var newPos = new THREE.Vector2(e.clientX, e.clientY);
+            var newPos = new THREE.Vector2(-e.clientX/33, e.clientY/33);
             if(lastPos == null){
                 lastPos = newPos;
                 return;

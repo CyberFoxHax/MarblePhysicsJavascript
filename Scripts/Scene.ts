@@ -11,25 +11,28 @@ function CreateScene():GameObject[]{
         NewGO(go=>{
             go.AddComponent(OrbitCamera);
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 10;
+            camera.position.z = -10;
+            camera.position.y = 1;
             go.Object3D = camera;
         }),
         NewGO(go=>{
             go.Name = "Ball";
             var body = go.AddComponent(Rigidbody);
-            body.Collider = new CANNON.Sphere(0.2);
             body.Mass = 0.2;
-            //go.AddComponent(Movement);
-            go.AddComponent(BallTest);
+            body.IsKinematic = true;
+            body.Collider = new CANNON.Sphere(0.2);
+            go.AddComponent(Movement);
+            //go.AddComponent(BallTest);
             var texture = textures["base.marble.jpg"];
             const geometry = new THREE.SphereGeometry(0.2, 64, 64);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: texture});
+            const material = new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.1, });
             const sphere = new THREE.Mesh(geometry, material);
             go.Object3D = sphere;
+            go.Object3D.position.y = 3; 
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
         }),
-        NewGO(go=>{
+        /*NewGO(go=>{
             go.Name = "Box";
             var body = go.AddComponent(Rigidbody);
             body.Collider = new CANNON.Box(new CANNON.Vec3(1,1,1));
@@ -41,22 +44,39 @@ function CreateScene():GameObject[]{
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
             go.Object3D.position.set(4, 0, 0);
-        }),
+        }),*/
         NewGO(go=>{
             go.Name = "Plane";
             var body = go.AddComponent(Rigidbody);
             body.Collider = new CANNON.Box(new CANNON.Vec3(5,5,0.01));
             body.Mass = 0;
-            const geometry = new THREE.PlaneGeometry(1,1,1);
-            const material = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            const geometry = new THREE.PlaneGeometry(1,1);
+            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"] });
             const cube = new THREE.Mesh(geometry, material);
             go.Object3D = cube;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
             go.Object3D.scale.x = 10;
             go.Object3D.scale.y = 10;
-            go.Object3D.position.y = -0.5;
+            go.Object3D.position.y = 0;
             go.Object3D.rotation.x = -Math.PI/2;
+        }),
+        NewGO(go=>{
+            go.Name = "Plane2";
+            var body = go.AddComponent(Rigidbody);
+            body.Collider = new CANNON.Box(new CANNON.Vec3(5,5,0.01));
+            body.Mass = 0;
+            const geometry = new THREE.PlaneGeometry(1,1);
+            const material = new THREE.MeshLambertMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"] });
+            const cube = new THREE.Mesh(geometry, material);
+            go.Object3D = cube;
+            go.Object3D.receiveShadow = true;
+            go.Object3D.castShadow = true;
+            go.Object3D.scale.x = 10;
+            go.Object3D.scale.y = 10;
+            go.Object3D.position.y = 5;
+            go.Object3D.position.x = 5;
+            go.Object3D.rotation.y = -Math.PI/2;
         }),
         NewGO(go=>{
             const light = new THREE.DirectionalLight(0xffffff, 1);
