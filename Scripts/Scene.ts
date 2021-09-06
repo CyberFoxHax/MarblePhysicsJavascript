@@ -25,10 +25,10 @@ function CreateScene():GameObject[]{
             //go.AddComponent(BallTest);
             var texture = textures["base.marble.jpg"];
             const geometry = new THREE.SphereGeometry(0.2, 64, 64);
-            const material = new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.1, });
+            const material = new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.1 });
             const sphere = new THREE.Mesh(geometry, material);
             go.Object3D = sphere;
-            go.Object3D.position.y = 3; 
+            go.Object3D.position.y = 30;
             go.Object3D.receiveShadow = true;
             go.Object3D.castShadow = true;
         }),
@@ -64,6 +64,8 @@ function CreateScene():GameObject[]{
         for (let x = 0; x < 10; x++) {    
             if(x==5 && y == 5)
                 continue;
+            if(Math.random() > 0.8)
+                continue;
             scene.push(NewGO(go=>{
                 go.Name = "Box";
                 var body = go.AddComponent(Rigidbody);
@@ -80,6 +82,30 @@ function CreateScene():GameObject[]{
             }));
         }   
     }
+
+    for (let i = 0; i < 2; i++) {
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {    
+            if(x==5 && y == 5)
+                continue;
+            var size = new THREE.Vector3(5*Math.random(),5+Math.random()*30, 5*Math.random());
+            if(size.y < 0.2)
+                    continue;
+            scene.push(NewGO(go=>{
+                go.Name = "Box";
+                var body = go.AddComponent(Rigidbody);
+                body.Collider = new CANNON.Box(new CANNON.Vec3(size.x/2, size.y/2, size.z/2));
+                body.Mass = 0;
+                const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+                const material = new THREE.MeshPhysicalMaterial({ color: 0x999999, map: textures["DefaultTexture.bmp"], roughness: 0.8  });
+                const cube = new THREE.Mesh(geometry, material);
+                go.Object3D = cube;
+                go.Object3D.receiveShadow = true;
+                go.Object3D.castShadow = true;
+                go.Object3D.position.set((-10/2+x)*10 + Math.random()*10, -5, (-10/2+y)*10 + Math.random()*10);
+            }));
+        }   
+    }}
     
     return scene;
 }

@@ -45,25 +45,28 @@ class _Input{
         this._mouseDelta = new THREE.Vector2();
     }
 
+    private keyboardKeys: Record<string, boolean> = {};
+    private OnKeyChanged(key: string, value: boolean){
+        this.keyboardKeys[key] = value;
+
+        this._axisRaw.x = 0;
+        if(this.keyboardKeys["d"]==true) this._axisRaw.x++;
+        if(this.keyboardKeys["a"]==true) this._axisRaw.x--;
+
+        this._axisRaw.y = 0;
+        if(this.keyboardKeys["w"]==true) this._axisRaw.y++;
+        if(this.keyboardKeys["s"]==true) this._axisRaw.y--;
+
+        this._jump = this.keyboardKeys[" "] == true;
+    }
+
     public Init(renderer:HTMLElement){
         var _this = this;
         window.onkeydown = function(e: KeyboardEvent){
-            switch (e.key) {
-                case "w": _this._axisRaw.y = 1; break;
-                case "a": _this._axisRaw.x = -1; break;
-                case "s": _this._axisRaw.y = -1; break;
-                case "d": _this._axisRaw.x = 1; break;
-                case " ": _this._jump = true; break;
-            }
+            _this.OnKeyChanged(e.key, true);
         };
         window.onkeyup = function(e: KeyboardEvent){
-            switch (e.key) {
-                case "w": _this._axisRaw.y = 0; break;
-                case "a": _this._axisRaw.x = 0; break;
-                case "s": _this._axisRaw.y = 0; break;
-                case "d": _this._axisRaw.x = 0; break;
-                case " ": _this._jump = false; break;
-            }
+            _this.OnKeyChanged(e.key, false);
         };
 
         renderer.addEventListener("mousemove", function(e: MouseEvent){

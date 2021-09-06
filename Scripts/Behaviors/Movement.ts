@@ -42,7 +42,7 @@ class Movement extends MonoBehaviour
 	private get Radius() { return 0.2; }
 
 	private get InputMovement():THREE.Vector2 {
-        return new THREE.Vector2(-Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).add(this._fakeInput);
+        return new THREE.Vector2(-Input.GetAxisRaw("Horizontal"), -Input.GetAxisRaw("Vertical")).add(this._fakeInput);
     }
 	private _fakeInput: THREE.Vector2 = _Vector2.zero;
 
@@ -85,7 +85,7 @@ class Movement extends MonoBehaviour
 
         for (let i = 0; i < this._colTests.length; i++) {
             this.GenerateMeshInfo(array[i]);
-        }*/
+		}*/
 	}
 
 	/*private GenerateMeshInfo(meshCollider: CANNON.Body): void
@@ -106,9 +106,14 @@ class Movement extends MonoBehaviour
 		this.GenerateMeshInfo(meshCollider);
 	}*/
 
-	Update(){
-		
-	}
+	/*Update(){
+		var twerp = debugOut.innerHTML;
+		var v = this.Velocity.length();
+		//twerp = (v.x + ", " + v.y + ", "+ v.z)+"<br />"+twerp;
+		twerp = (v)+"<br />"+twerp;
+		var twerp = twerp.substring(0, 5000);
+		debugOut.innerHTML = twerp;
+	}*/
 	
 	// Per-tick updates
 	FixedUpdate(): void
@@ -130,6 +135,7 @@ class Movement extends MonoBehaviour
 		var velocity: Ref<THREE.Vector3> = new Ref(this.Velocity);
 		var omega: Ref<THREE.Vector3> = new Ref(this.AngularVelocity);
 		
+		//var twerp = debugOut.innerHTML;
 		for (let i = 0; i < this._rigidBody.collisions.length; i++) {
 			var contact = this._rigidBody.collisions[i];
 			var col = new CollisionInfo();
@@ -149,10 +155,13 @@ class Movement extends MonoBehaviour
 			);
 			col.Velocity = _Vector3.zero;
 			contacts.push(col);
+
+			//twerp = (col.Normal.x + ", " + col.Normal.y + ", "+ col.Normal.z)+"<br />"+twerp;
 			//Debug.DrawRay(contact.point, contact.normal, Color.blue, 5);
 		}
+		//twerp = twerp.substring(0, 1000);
+		//debugOut.innerHTML = twerp;
         
-
         this._updateMove(dt, velocity, omega, contacts);
 		// velocity += _gravityDir * _gravity * dt;
 
@@ -200,7 +209,7 @@ class Movement extends MonoBehaviour
 		var isMoving = this._computeMoveForces(angVelocity.v, torque, targetAngVel);
 		this._velocityCancel(contacts, velocity, angVelocity, !isMoving, false);
         var externalForces: Ref<THREE.Vector3> = new Ref(this._getExternalForces(dt.v, contacts));
-        var angAccel: Ref<THREE.Vector3> = new Ref<THREE.Vector3>(null);
+		var angAccel: Ref<THREE.Vector3> = new Ref<THREE.Vector3>(null);
 		this._applyContactForces(dt.v, contacts, !isMoving, torque.v, targetAngVel.v, velocity, angVelocity, externalForces, angAccel);
 		velocity.v.add(externalForces.v.clone().multiplyScalar(dt.v));
 		angVelocity.v.add(angAccel.v.clone().multiplyScalar(dt.v));
@@ -232,7 +241,7 @@ class Movement extends MonoBehaviour
 		var topX: number = topVelocity.clone().dot(sideDir.v);
 		var move: THREE.Vector2 = this.InputMovement;
 		// move.Normalize();
-		var moveY: number = this.MaxRollVelocity * -move.y;
+		var moveY: number = this.MaxRollVelocity * move.y;
 		var moveX: number = this.MaxRollVelocity * move.x;
 		if (Math.abs(moveY) < 0.001 && Math.abs(moveX) < 0.001)
 			return false;
@@ -438,7 +447,7 @@ class Movement extends MonoBehaviour
 			{
 				var num3: number = 0.1;
 				var penetration: number = contacts[index].Penetration;
-				var num4: number = velocity.v.add(vector39.clone().multiplyScalar(num8)).dot(contacts[index].Normal);
+				var num4 = (velocity.v.clone().addScalar(num8).multiply(vector39)).dot(contacts[index].Normal);
 				if (num3 * num4 < penetration)
 					num8 += (penetration - num4 * num3) / num3 / contacts[index].Normal.dot(vector39);
 			}
@@ -538,7 +547,7 @@ class Movement extends MonoBehaviour
 				var vector36: THREE.Vector3 = vector35.clone().cross(linAccel.v).divideScalar(vector35.lengthSq());
 				if (isCentered)
 				{
-					var vector37: THREE.Vector3 = omega.v.clone().add(angAccel.v).multiplyScalar(dt);
+					var vector37: THREE.Vector3 = omega.v.clone().add(angAccel.v.clone().multiplyScalar(dt));
 					aControl = desiredOmega.clone().sub(vector37);
 					var num3 = aControl.length();
 					if (num3 > this.BrakingAcceleration)

@@ -33,7 +33,7 @@ window.onload = (async function(){
     const three_scene = new THREE.Scene();
     var camera: THREE.PerspectiveCamera = null;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;

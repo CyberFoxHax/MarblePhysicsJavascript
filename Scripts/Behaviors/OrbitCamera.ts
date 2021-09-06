@@ -6,7 +6,7 @@ class OrbitCamera extends MonoBehaviour {
 	public pitch : number = 0;
 
 	public cameraSpeed : number = 5;
-	public invertX : boolean = false;
+	public invertX : boolean = true;
 	public invertY : boolean = false;
 
 	public target: THREE.Object3D = null;
